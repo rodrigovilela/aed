@@ -1,7 +1,11 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-from .models import Greeting
+from .models import TipoTrecho
+from .models import Noticia
+from .models import Trecho
+
+from similaridade.processador_texto import ProcessadorTexto
 
 # Create your views here.
 def index(request):
@@ -9,11 +13,30 @@ def index(request):
     return render(request, "index.html")
 
 
-def db(request):
+def news(request, id):
 
-    greeting = Greeting()
-    greeting.save()
+    noticia = Noticia.objects.get(id=id)
+    trechosTexto = ProcessadorTexto.extrair_trechos(noticia.texto)
 
-    greetings = Greeting.objects.all()
+    for trechoTexto in trechosTexto:
+        trechoTipoTexto = buscarOuCriarTrecho(trechoTexto, TipoTrecho.TEXTO_NORMAL)
+        trechoTipoHash = buscarOuCriarTrecho(ProcessadorTexto.gerar_hash(trechoTexto), TipoTrecho.HASH_12)
+        adicionarTrecho(noticia, trechoTipoTexto)
+        adicionarTrecho(noticia, trechoTipoHash)
+        noticia.save()
 
-    return render(request, "db.html", {"greetings": greetings})
+    noticias = Noticia.objects.all()
+
+    return render(request, "news.html", {"noticia": noticia, "relacionadas": noticias})
+
+
+def buscarOuCriarTrecho(valor, tipo):
+    trecho = Trecho.objects.filter(valor=valor, tipo=tipo).first()
+    if not trecho:
+        trecho = Trecho(valor=valor, tipo=tipo)
+        trecho.save()
+    return trecho
+
+def adicionarTrecho(noticia, trecho):
+    if trecho not in noticia.trechos.all():
+        noticia.trechos.add(trecho)
