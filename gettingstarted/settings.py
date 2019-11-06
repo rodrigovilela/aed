@@ -93,8 +93,6 @@ WSGI_APPLICATION = "gettingstarted.wsgi.application"
 #     }
 # }
 
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-
 
 
 # Password validation
@@ -131,3 +129,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = "/static/"
 
 django_heroku.settings(locals())
+
+DATABASES = {}
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
