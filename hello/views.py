@@ -1,42 +1,82 @@
+from django.db.models import Q
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
+from hello.forms import BuscarNoticiaForm
 from .models import TipoTrecho
 from .models import Noticia
 from .models import Trecho
 
 from similaridade.processador_texto import ProcessadorTexto
 
-# Create your views here.
+
 def index(request):
-    # return HttpResponse('Hello from Python!')
-    return render(request, "index.html")
+    return render(request, 'index.html', {'noticias': buscar_noticias(None)})
+
+
+def buscar(request):
+    # if this is a POST request we need to process the form data
+    termo = ''
+    noticias = []
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = BuscarNoticiaForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            termo = form.cleaned_data['termo']
+            noticias = buscar_noticias(termo)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        noticias = buscar_noticias(None)
+        form = BuscarNoticiaForm()
+
+    return render(request, 'index.html', {'form': form, 'noticias': noticias, 'termo': termo})
 
 
 def news(request, id):
 
     noticia = Noticia.objects.get(id=id)
-    trechosTexto = ProcessadorTexto.extrair_trechos(noticia.texto)
-
-    for trechoTexto in trechosTexto:
-        trechoTipoTexto = buscarOuCriarTrecho(trechoTexto, TipoTrecho.TEXTO_NORMAL)
-        trechoTipoHash = buscarOuCriarTrecho(ProcessadorTexto.gerar_hash(trechoTexto), TipoTrecho.HASH_12)
-        adicionarTrecho(noticia, trechoTipoTexto)
-        adicionarTrecho(noticia, trechoTipoHash)
-        noticia.save()
-
-    noticias = Noticia.objects.all()
+    noticias = Noticia.objects.filter(trechos__in=noticia.trechos.all())\
+        .exclude(id=noticia.id)\
+        .distinct()\
+        .order_by('-publicacao')
 
     return render(request, "news.html", {"noticia": noticia, "relacionadas": noticias})
 
 
-def buscarOuCriarTrecho(valor, tipo):
+def trechos(request):
+
+    noticias = Noticia.objects.all()
+
+    for noticia in noticias:
+        trechos_texto = ProcessadorTexto.extrair_trechos(noticia.texto)
+        for trechoTexto in trechos_texto:
+            trecho_tipo_texto = buscar_ou_criar_trecho(trechoTexto, TipoTrecho.TEXTO_NORMAL)
+            trecho_tipo_hash = buscar_ou_criar_trecho(ProcessadorTexto.gerar_hash(trechoTexto), TipoTrecho.HASH_12)
+            adicionar_trecho(noticia, trecho_tipo_texto)
+            adicionar_trecho(noticia, trecho_tipo_hash)
+        noticia.save()
+
+    return news(request, noticias[0].id)
+
+
+def buscar_ou_criar_trecho(valor, tipo):
     trecho = Trecho.objects.filter(valor=valor, tipo=tipo).first()
     if not trecho:
         trecho = Trecho(valor=valor, tipo=tipo)
         trecho.save()
     return trecho
 
-def adicionarTrecho(noticia, trecho):
+
+def adicionar_trecho(noticia, trecho):
     if trecho not in noticia.trechos.all():
         noticia.trechos.add(trecho)
+
+def buscar_noticias(termo):
+    if termo:
+        noticias = Noticia.objects.filter(Q(titulo__icontains=termo) | Q(texto__icontains=termo)) \
+                .order_by('-publicacao')
+    else:
+        noticias = Noticia.objects.all().order_by('-publicacao')[:10]
+    return noticias

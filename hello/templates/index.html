@@ -3,25 +3,6 @@
 
 {% block content %}
 
-<div class="jumbotron text-center">
-  <div class="container">
-    <!--
-    <a href="/" class="lang-logo">
-      <img src="{% static 'lang-logo.png'%}">
-    </a>
-    -->
-    <h1>Busca de Notícias</h1>
-    <!--
-    <p>This is a sample Python application deployed to Heroku. It's a reasonably simple app - but a good foundation for understanding how to get the most out of the Heroku platform.</p>
-    <a type="button" class="btn btn-lg btn-default" href="https://devcenter.heroku.com/articles/getting-started-with-python"><span class="glyphicon glyphicon-flash"></span> Getting Started with Python</a>
-    <a type="button" class="btn btn-lg btn-primary" href="https://github.com/heroku/python-getting-started"><span class="glyphicon glyphicon-download"></span> Source on GitHub</a>
-    -->
-    <form class="form-inline">
-      <input type="text" id="termo" class="form-control form-control-lg" name="termo" size="50"/>
-      <button type="submit" class="btn btn-primary mb-2">Buscar</button>
-    </form>
-  </div>
-</div>
 <div class="container">
 <!--
   <div class="alert alert-info text-center" role="alert">
@@ -29,32 +10,13 @@
   </div>
   <hr>
 -->
+  {% for noticia in noticias %}
   <div class="row">
     <div class="col-md-8">
-      <h3><span class="glyphicon glyphicon-info-sign"></span> Título da notícia</h3>
-      <ul>
-        <p>This app was deployed to Heroku, either using Git or by using <a href="https://github.com/heroku/python-getting-started">Heroku Button</a> on the repository.</p>
-
-        <p>When Heroku received the source code, it fetched all the dependencies in the <a href="https://github.com/heroku/python-getting-started/blob/master/Pipfile">Pipfile</a>, creating a deployable slug.</p>
-        <p>The platform then spins up a dyno, a lightweight container that provides an isolated environment in which the slug can be mounted and executed.</p>
-        <p>You can scale your app, manage it, and deploy over <a href="https://addons.heroku.com/">150 add-on services</a>, from the Dashboard or CLI.</p>
-        <p>This app was deployed to Heroku, either using Git or by using <a href="https://github.com/heroku/python-getting-started">Heroku Button</a> on the repository.</p>
-
-        <p>When Heroku received the source code, it fetched all the dependencies in the <a href="https://github.com/heroku/python-getting-started/blob/master/Pipfile">Pipfile</a>, creating a deployable slug.</p>
-        <p>The platform then spins up a dyno, a lightweight container that provides an isolated environment in which the slug can be mounted and executed.</p>
-        <p>You can scale your app, manage it, and deploy over <a href="https://addons.heroku.com/">150 add-on services</a>, from the Dashboard or CLI.</p>
-      </ul>
-    </div>
-    <div class="col-md-4">
-      <h3><span class="glyphicon glyphicon-link"></span> Notícias relacionadas</h3>
-      <ul>
-        <li><a href="https://www.heroku.com/home">Heroku</a></li>
-        <li><a href="https://devcenter.heroku.com/">Heroku Dev Center</a></li>
-        <li><a href="https://devcenter.heroku.com/articles/getting-started-with-python">Getting Started with Python on Heroku</a></li>
-        <li><a href="https://devcenter.heroku.com/articles/django-app-configuration">Configuring Django Apps for Heroku</a></li>
-      </ul>
+      <h4><span class="glyphicon glyphicon-info-sign"></span> <a href="/news/{{noticia.id}}">{{noticia.titulo}}</a> - {{noticia.publicacao}}</h4>
     </div>
   </div> <!-- row -->
+  {% endfor %}
    <div class="alert alert-info text-center" role="alert">
     Aplicação desenvolvida para prova de conceito de algoritmo de identificação de similaridade em textos. Código fonte disponível no <a href="https://github.com/rodrigovilela/aed">github</a>.
   </div>

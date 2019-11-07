@@ -15,6 +15,7 @@ class ProcessadorTexto():
         trechos = texto.split(".")
         trechos_validos = []
         for trecho in trechos:
+            trecho = trecho.strip()
             if len(trecho) > 0:
                 trechos_validos.append(trecho.lower())
 
