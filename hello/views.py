@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
 from hello.forms import BuscarNoticiaForm
+from similaridade.kmp import KPM
 from .models import TipoTrecho
 from .models import Noticia
 from .models import Trecho
@@ -59,6 +60,24 @@ def trechos(request):
         noticia.save()
 
     return news(request, noticias[0].id)
+
+
+def news_kmp(request, id):
+
+    noticia_buscada = Noticia.objects.get(id=id)
+    noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)
+    noticias_relacionadas = []
+    for trecho in noticia_buscada.trechos.all().filter(tipo=TipoTrecho.TEXTO_NORMAL):
+
+        # Calcula a matriz de prefixos do padrão (texto de busca)
+        l_posicoes = KPM.calcula_prefixo(trecho.valor)
+
+        for noticia in noticias:
+
+            if noticia not in noticias_relacionadas and KPM.busca_kmp_primeira_ocorrencia(noticia.texto.lower(), trecho.valor, l_posicoes) >= 0:
+                noticias_relacionadas.append(noticia)
+
+    return render(request, "news.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})
 
 
 def buscar_ou_criar_trecho(valor, tipo):
