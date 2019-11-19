@@ -159,7 +159,7 @@ class Levenshtein:
         for i in range(0, len(lista1)):
             d_max = 1000
             posicao_j = 0
-            qt_palavras1 = 0
+            qt_palavras1 = 1
             qt_palavras2 = 0
 
             # Exibe cada frase do texto1 antes de compará-la às frases do texto2
