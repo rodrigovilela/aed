@@ -1,4 +1,4 @@
-class KPM():
+class KPM:
     """
     Algoritmo de Busca - Knuth Morris Pratt
     Objetivo: Comparar os caracteres de dois textos e verificar se existe String Matching

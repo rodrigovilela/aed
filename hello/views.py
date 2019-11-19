@@ -3,7 +3,9 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
 from hello.forms import BuscarNoticiaForm
+from similaridade.bm import BoyerMoore
 from similaridade.kmp import KPM
+from similaridade.levenshtein import Levenshtein
 from .models import TipoTrecho
 from .models import Noticia
 from .models import Trecho
@@ -74,10 +76,66 @@ def news_kmp(request, id):
 
         for noticia in noticias:
 
-            if noticia not in noticias_relacionadas and KPM.busca_kmp_primeira_ocorrencia(noticia.texto.lower(), trecho.valor, l_posicoes) >= 0:
+            if noticia not in noticias_relacionadas and KPM.busca_kmp_primeira_ocorrencia(
+                    noticia.texto.lower(), trecho.valor, l_posicoes) >= 0:
                 noticias_relacionadas.append(noticia)
 
     return render(request, "news.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})
+
+def news_bm(request, id):
+
+    noticia_buscada = Noticia.objects.get(id=id)
+    noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)
+    noticias_relacionadas = []
+    for trecho in noticia_buscada.trechos.all().filter(tipo=TipoTrecho.TEXTO_NORMAL):
+
+        # Calcula a tabela de saltos
+        tabela = BoyerMoore.calcula_tabela_saltos(trecho.valor)
+
+        for noticia in noticias:
+            if noticia not in noticias_relacionadas and BoyerMoore.busca_bm_primeira_ocorrencia(
+                    trecho.valor, noticia.texto.lower(), tabela) >= 0:
+                noticias_relacionadas.append(noticia)
+
+    return render(request, "news.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})
+
+
+def news_jaccard(request, id):
+
+    noticia_buscada = Noticia.objects.get(id=id)
+    noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)
+    noticias_relacionadas = []
+    for trecho in noticia_buscada.trechos.all().filter(tipo=TipoTrecho.TEXTO_NORMAL):
+
+        for noticia in noticias:
+
+            for trechoNoticia in noticia.trechos.all():
+
+                if noticia not in noticias_relacionadas and \
+                        similaridade_jaccard(trecho.valor, trechoNoticia.valor) >= 0.7:
+                    noticias_relacionadas.append(noticia)
+
+    return render(request, "news.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})
+
+
+def news_levenshtein(request, id):
+    print('LEVE(', id, '): ')
+
+    noticia_buscada = Noticia.objects.get(id=id)
+    noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)
+    noticias_relacionadas = []
+
+    for noticia in noticias:
+        percentual = Levenshtein.compara_textos(noticia_buscada.texto, noticia.texto)
+        print('Percentual(', noticia.id, '): ', percentual)
+        if percentual > 0:
+            noticia.percentual = percentual
+            noticias_relacionadas.append(noticia)
+
+    return render(request, "news-leve.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})
+
+
+# --------------------------------------- AUXILIARES ---------------------------------------
 
 
 def buscar_ou_criar_trecho(valor, tipo):
@@ -92,6 +150,7 @@ def adicionar_trecho(noticia, trecho):
     if trecho not in noticia.trechos.all():
         noticia.trechos.add(trecho)
 
+
 def buscar_noticias(termo):
     if termo:
         noticias = Noticia.objects.filter(Q(titulo__icontains=termo) | Q(texto__icontains=termo)) \
@@ -99,3 +158,11 @@ def buscar_noticias(termo):
     else:
         noticias = Noticia.objects.all().order_by('-publicacao')[:10]
     return noticias
+
+
+def similaridade_jaccard(a, b):
+    a = a.split()
+    b = a.split()
+    union = list(set(a + b))
+    intersection = list(set(a) - (set(a) - set(b)))
+    return float(len(intersection)) / len(union)

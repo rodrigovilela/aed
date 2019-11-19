@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+
+<div class="container">
+<!--
+  <div class="alert alert-info text-center" role="alert">
+    To deploy your own copy, and learn the fundamentals of the Heroku platform, head over to the <a href="https://devcenter.heroku.com/articles/getting-started-with-python" class="alert-link">Getting Started with Python on Heroku</a> tutorial.
+  </div>
+  <hr>
+-->
+  <div class="row">
+    <div class="col-md-8">
+      <h3><span class="glyphicon glyphicon-info-sign"></span> {{noticia.titulo}}</h3>
+      <ul>
+        <p>{{noticia.texto}}</p>
+      </ul>
+    </div>
+    <div class="col-md-4">
+      <h3><span class="glyphicon glyphicon-link"></span> Notícias relacionadas</h3>
+      <ul>
+        {% for relacionada in relacionadas %}
+            <li><a href="/news-leve/{{relacionada.id}}">{{relacionada.titulo}} ({{relacionada.percentual}}%)</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div> <!-- row -->
+   <div class="alert alert-info text-center" role="alert">
+    Aplicação desenvolvida para prova de conceito de algoritmo de identificação de similaridade em textos. Código fonte disponível no <a href="https://github.com/rodrigovilela/aed">github</a>.
+  </div>
+</div>
+{% endblock %}

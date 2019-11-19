@@ -20,5 +20,6 @@ urlpatterns = [
     path("trechos/", hello.views.trechos, name="trechos"),
     path("news/<int:id>", hello.views.news, name="news"),
     path("news-kmp/<int:id>", hello.views.news_kmp, name="news-kmp"),
+    path("news-leve/<int:id>", hello.views.news_levenshtein, name="news-leve"),
     path("admin/", admin.site.urls),
 ]
