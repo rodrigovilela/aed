@@ -159,7 +159,7 @@ class Levenshtein:
         for i in range(0, len(lista1)):
             d_max = 1000
             posicao_j = 0
-            qt_palavras1 = 1
+            qt_palavras1 = 0
             qt_palavras2 = 0
 
             # Exibe cada frase do texto1 antes de compará-la às frases do texto2
@@ -182,8 +182,10 @@ class Levenshtein:
 
             # Ao percorrer todas as frases do texto2, podemos identificar qual delas possui maior similaridade com o texto1
             # Calcula-se o percentual de similaridade entre as duas frases
-            percent_distancia = (d_max / qt_palavras1) * 100
-            percent_similaridade = 100 - percent_distancia
+            percent_similaridade = 0
+            if qt_palavras1 > 0:
+                percent_distancia = (d_max / qt_palavras1) * 100
+                percent_similaridade = 100 - percent_distancia
 
             # Exibição da frase do texto2 que possui maior similaridade com o texto1
             #print('Frase com maior similaridade:')
@@ -207,7 +209,8 @@ class Levenshtein:
         for i in range(0, len(lista_similaridade)):
             peso = peso + lista_similaridade[i][0]
             soma = soma + (lista_similaridade[i][0] * lista_similaridade[i][1])
-        similaridade = soma / peso
+        if peso > 0:
+            similaridade = soma / peso
         #print('')
 
         # Exibe a lista de similaridades
