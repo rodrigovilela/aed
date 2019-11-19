@@ -209,6 +209,7 @@ class Levenshtein:
         for i in range(0, len(lista_similaridade)):
             peso = peso + lista_similaridade[i][0]
             soma = soma + (lista_similaridade[i][0] * lista_similaridade[i][1])
+        similaridade = 0
         if peso > 0:
             similaridade = soma / peso
         #print('')
