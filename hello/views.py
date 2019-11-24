@@ -6,6 +6,9 @@ from hello.forms import BuscarNoticiaForm
 from similaridade.bm import BoyerMoore
 from similaridade.kmp import KPM
 from similaridade.levenshtein import Levenshtein
+from similaridade.tfidf import tfidf
+
+from similaridade.cosine import cosine
 from .models import TipoTrecho
 from .models import Noticia
 from .models import Trecho
@@ -133,6 +136,23 @@ def news_levenshtein(request, id):
             noticias_relacionadas.append(noticia)
 
     return render(request, "news-leve.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})
+
+def news_cosine(request, id):
+    noticia_buscada = Noticia.objects.get(id=id)    
+    noticias = [noticia for noticia in Noticia.objects.all().filter(veiculo='wikipedia')[:10]]
+    
+    vdocs = tfidf(noticias, True)
+    tfidf_docs = vdocs.get_all_tf_idf()
+    
+    noticias_relacionadas = []
+    for noticia in noticias:        
+        tfidf_nb = [tfidf for word, tfidf in tfidf_docs[noticia_buscada.id].items()]
+        tfidf_n = [tfidf for word, tfidf in tfidf_docs[noticia.id].items()]
+        angle = cosine.similarity(tfidf_nb, tfidf_n)
+        if (angle >= 0.3):
+            noticias_relacionadas.append(noticia)
+    
+    return render(request, "news-cos.html", {"noticia": noticias, "relacionadas": noticias_relacionadas})
 
 
 # --------------------------------------- AUXILIARES ---------------------------------------

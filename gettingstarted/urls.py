@@ -21,5 +21,6 @@ urlpatterns = [
     path("news/<int:id>", hello.views.news, name="news"),
     path("news-kmp/<int:id>", hello.views.news_kmp, name="news-kmp"),
     path("news-leve/<int:id>", hello.views.news_levenshtein, name="news-leve"),
+    path("news-cos/<int:id>", hello.views.news_cosine, name="news-cos"),
     path("admin/", admin.site.urls),
 ]
