@@ -1,9 +1,10 @@
+import nltk
 import numpy as np
 import math
 
 from nltk.corpus import stopwords
 
-# nltk.download('stopwords')
+nltk.download('stopwords')
 
 class vectorize():
 
