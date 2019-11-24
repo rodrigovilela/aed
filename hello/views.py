@@ -128,8 +128,8 @@ def news_levenshtein(request, id):
     for noticia in noticias:
         percentual = Levenshtein.compara_textos(noticia_buscada.texto, noticia.texto)
         print('Percentual(', noticia.id, '): ', percentual)
-        if percentual > 0:
-            noticia.percentual = percentual
+        if percentual[0] > 0:
+            noticia.percentual = percentual[0]
             noticias_relacionadas.append(noticia)
 
     return render(request, "news-leve.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})

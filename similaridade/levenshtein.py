@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+from benchmarkit import benchmark
+
 
 class Levenshtein:
 
@@ -133,6 +135,7 @@ class Levenshtein:
 
     # Método principal que compara as frases entre dois textos e retorna o percentual de similaridade entre eles
     @staticmethod
+    @benchmark()
     def compara_textos(texto1, texto2):
         # Simplificação dos textos de entrada
         texto1 = Levenshtein.limpar_texto(texto1)
