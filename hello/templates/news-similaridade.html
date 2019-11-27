@@ -21,7 +21,7 @@
       <h3><span class="glyphicon glyphicon-link"></span> Notícias relacionadas</h3>
       <ul>
         {% for relacionada in relacionadas %}
-            <li><a href="/news-leve/{{relacionada.id}}">{{relacionada.titulo}} ({{relacionada.percentual}}%)</a></li>
+            <li><a href="/news{{similaridade}}/{{relacionada.id}}">{{relacionada.titulo}} ({{relacionada.percentual}}%)</a></li>
         {% endfor %}
       </ul>
     </div>

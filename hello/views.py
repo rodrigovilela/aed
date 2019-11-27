@@ -1,19 +1,23 @@
+import io
+
+import pandas as pd
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 from hello.forms import BuscarNoticiaForm
 from similaridade.bm import BoyerMoore
+from similaridade.cosine import cosine
+from similaridade.jaccard import Jaccard
 from similaridade.kmp import KPM
 from similaridade.levenshtein import Levenshtein
-from similaridade.tfidf import tfidf
-
-from similaridade.cosine import cosine
-from .models import TipoTrecho
-from .models import Noticia
-from .models import Trecho
-
 from similaridade.processador_texto import ProcessadorTexto
+from similaridade.tfidf import tfidf
+from .models import Noticia
+from .models import TipoTrecho
+from .models import Trecho
 
 
 def index(request):
@@ -108,34 +112,29 @@ def news_jaccard(request, id):
     noticia_buscada = Noticia.objects.get(id=id)
     noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)
     noticias_relacionadas = []
-    for trecho in noticia_buscada.trechos.all().filter(tipo=TipoTrecho.TEXTO_NORMAL):
 
-        for noticia in noticias:
+    for noticia in noticias:
+        percentual = Jaccard.similaridade_jaccard(noticia_buscada.texto, noticia.texto)
+        if noticia not in noticias_relacionadas and percentual[0] > 10:
+            noticia.percentual = percentual[0]
+            noticias_relacionadas.append(noticia)
 
-            for trechoNoticia in noticia.trechos.all():
-
-                if noticia not in noticias_relacionadas and \
-                        similaridade_jaccard(trecho.valor, trechoNoticia.valor) >= 0.7:
-                    noticias_relacionadas.append(noticia)
-
-    return render(request, "news.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})
+    return render(request, "news-similaridade.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas, "similaridade": "-j"})
 
 
 def news_levenshtein(request, id):
-    print('LEVE(', id, '): ')
-
     noticia_buscada = Noticia.objects.get(id=id)
     noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)
     noticias_relacionadas = []
 
     for noticia in noticias:
         percentual = Levenshtein.compara_textos(noticia_buscada.texto, noticia.texto)
-        print('Percentual(', noticia.id, '): ', percentual)
+        #print('Percentual(', noticia.id, '): ', percentual)
         if percentual[0] > 0:
             noticia.percentual = percentual[0]
             noticias_relacionadas.append(noticia)
 
-    return render(request, "news-leve.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas})
+    return render(request, "news-similaridade.html", {"noticia": noticia_buscada, "relacionadas": noticias_relacionadas, "tipo-similaridade": "-leve"})
 
 def news_cosine(request, id):
     noticia_buscada = Noticia.objects.get(id=id)    
@@ -154,6 +153,45 @@ def news_cosine(request, id):
     
     return render(request, "news-cos.html", {"noticia": noticias, "relacionadas": noticias_relacionadas})
 
+def news_grafico(request, id):
+    noticia_buscada = Noticia.objects.get(id=id)
+    noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)
+
+    tml = []  #tempo medio levenshtein
+    tmj = []  #tempo medio jaccar
+    tamanhos = []
+    indices = []
+    elemento = 0
+
+    fig = Figure()
+    canvas = FigureCanvas(fig)
+    ax = fig.add_subplot(111)
+
+    for noticia in noticias:
+        percentualLeve = Levenshtein.compara_textos(noticia_buscada.texto, noticia.texto)
+        indiceJaccard = Jaccard.similaridade_jaccard(noticia_buscada.texto, noticia.texto)
+
+        tml.append(percentualLeve[1]['mean_time'])
+        tmj.append(indiceJaccard[1]['mean_time'])
+        tamanhos.append(len(noticia.texto))
+        indices.append(elemento)
+        elemento = elemento + 1
+
+    df = pd.DataFrame({'Levenshtein': tml, 'Jaccard': tmj}, index=tamanhos,)
+    df.sort_index(inplace=True)
+    print(df)
+    ax.set(xlabel='tamanho texto (caracteres)', ylabel='tempo (ms)', title='Algoritmos de similaridade: Tamanho X Tempo')
+
+    ax.plot(df)
+    ax.legend(['Levenshtein', 'Jaccard'])
+
+    buf = io.BytesIO()
+    canvas.print_png(buf)
+
+    response = HttpResponse(buf.getvalue(), content_type='image/png')
+    fig.clear()
+    response['Content-Length'] = str(len(response.content))
+    return response
 
 # --------------------------------------- AUXILIARES ---------------------------------------
 
@@ -178,11 +216,3 @@ def buscar_noticias(termo):
     else:
         noticias = Noticia.objects.all().order_by('-publicacao')[:10]
     return noticias
-
-
-def similaridade_jaccard(a, b):
-    a = a.split()
-    b = a.split()
-    union = list(set(a + b))
-    intersection = list(set(a) - (set(a) - set(b)))
-    return float(len(intersection)) / len(union)

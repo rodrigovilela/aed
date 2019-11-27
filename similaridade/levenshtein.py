@@ -135,7 +135,7 @@ class Levenshtein:
 
     # Método principal que compara as frases entre dois textos e retorna o percentual de similaridade entre eles
     @staticmethod
-    @benchmark()
+    @benchmark(num_iters=10)
     def compara_textos(texto1, texto2):
         # Simplificação dos textos de entrada
         texto1 = Levenshtein.limpar_texto(texto1)
