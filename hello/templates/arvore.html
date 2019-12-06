@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+          <div class="chart" id="basic-example"></div>
+          <script src="../static/treant-js-master/vendor/raphael.js"></script>
+          <script src="../static/treant-js-master/Treant.js"></script>
+          <script>
+
+            var config = {
+                    container: "#basic-example",
+
+                    connectors: {
+                        type: 'step'
+                    },
+                    node: {
+                        HTMLclass: 'nodeExample1'
+                    }
+                },
+                n{{noticia.id}} = {
+                    text: {
+                        name: "{{noticia.titulo}}",
+                        title: "{{noticia.veiculo}}",
+                    },
+                    link: {
+                        href: "/news/{{noticia.id}}"
+                    },
+                    image: "../static/treant-js-master/headshots/1.jpg"
+                },
+                {% for similar in noticia.noticias_similares %}
+                    n{{similar.noticia_similar.id}} = {
+                        parent: n{{noticia.id}},
+                        text:{
+                            name: "{{similar.noticia_similar.titulo}}",
+                            title: "{{similar.noticia_similar.veiculo}}",
+                            contact: "Similaridade: {{similar.percentual}}%",
+                        },
+                        link: {
+                            href: "/news/{{similar.noticia_similar.id}}"
+                        },
+                        stackChildren: true,
+                        image: "../static/treant-js-master/headshots/1.jpg"
+                    },
+
+                    {% for similar_filha in similar.noticia_similar.noticias_similares %}
+                        nf{{similar_filha.noticia_similar.id}} = {
+                            parent: n{{similar.noticia_similar.id}},
+                            text:{
+                                name: "{{similar_filha.noticia_similar.titulo}}",
+                                title: "{{similar_filha.noticia_similar.veiculo}}",
+                                contact: "Similaridade: {{similar_filha.percentual}}%",
+                            },
+                            link: {
+                                href: "/news/{{similar_filha.noticia_similar.id}}"
+                            },
+                            image: "../static/treant-js-master/headshots/1.jpg"
+                        },
+                    {% endfor %}
+                {% endfor %}
+
+                chart_config = [
+                    config,
+                    n{{noticia.id}},
+                    {% for similar in noticia.noticias_similares %}
+                        n{{similar.noticia_similar.id}},
+                        {% for similar_filha in similar.noticia_similar.noticias_similares %}
+                            nf{{similar_filha.noticia_similar.id}},
+                        {% endfor %}
+                    {% endfor %}
+                ];
+
+            new Treant( chart_config );
+        </script>
+    </div>
+  </div>
+</div>
+{% endblock %}

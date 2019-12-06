@@ -9,13 +9,44 @@ class Levenshtein:
     Algoritmo de similaridade - Levenshtein
     """
 
+    # Calcula a distância de Leventheins comparando caracteres entre palavras
+    @staticmethod
+    def levenshtein_caractere(s1, s2):
+        m = len(s1) + 1
+        n = len(s2) + 1
+
+        matriz = np.zeros((m, n))
+
+        for i in range(0, m):
+            matriz[i][0] = i
+
+        for i in range(0, n):
+            matriz[0][i] = i
+
+        for i in range(1, m):
+            for j in range(1, n):
+                if s1[i - 1] == s2[j - 1]:
+                    matriz[i, j] = min(
+                        matriz[i - 1, j] + 1,
+                        matriz[i - 1, j - 1],
+                        matriz[i, j - 1] + 1
+                    )
+                else:
+                    matriz[i, j] = min(
+                        matriz[i - 1, j] + 1,
+                        matriz[i - 1, j - 1] + 1,
+                        matriz[i, j - 1] + 1
+                    )
+        print(matriz)
+        distancia = (matriz[m - 1, n - 1])
+        #print('Distância de Levenshtein: ', distancia)
+        return distancia
+
     # Calcula a distância de Leventheins comparando palavras entre frases
     @staticmethod
-    def levenshtein_palavra(s1, s2):
-        l1 = s1.split(' ')
-        l2 = s2.split(' ')
-        # print(l1)
-        # print(l2)
+    def levenshtein_palavra(l1, l2):
+        # print('Lista 1: ', l1)
+        # print('Lista 2: ', l2)
         m = len(l1) + 1
         n = len(l2) + 1
 
@@ -43,11 +74,13 @@ class Levenshtein:
                     )
         # print(matriz)
         distancia = (matriz[m - 1, n - 1])
-        # print('Tamanho texto1: ', m - 1)
-        # print('Tamanho texto2: ', n - 1)
-        # print('Distância de Levenshtein: ', distancia)
-        return distancia, m-1, n-1
-
+        max_palavras = max(m - 1, n - 1)
+        similaridade = 1 - distancia / max_palavras
+        #print('Tamanho texto1: ', m - 1)
+        #print('Tamanho texto2: ', n - 1)
+        #print('Distância de Levenshtein: ', distancia)
+        #print('Similaridade: ', similaridade)
+        return similaridade
 
     # Remove acentos do texto
     @staticmethod
@@ -64,7 +97,6 @@ class Levenshtein:
         texto = texto.replace('ú', 'u')
         texto = texto.replace('ü', 'u')
         return texto
-
 
     # Remove caracteres especiais do texto
     @staticmethod
@@ -86,7 +118,6 @@ class Levenshtein:
         texto = texto.replace('/', '')
         return texto
 
-
     # Remove sinais de pontuação e substitui ? e ! por .
     @staticmethod
     def remover_sinais_pontuacao(texto):
@@ -97,13 +128,15 @@ class Levenshtein:
         texto = texto.replace('!', '.')
         return texto
 
-
     # Remove palavras simples: artigos, preposições, etc
     @staticmethod
     def remover_palavras_simples(texto):
+        texto = texto.replace('<br>', '')
         texto = texto.replace(' a ', ' ')
+        texto = texto.replace(' as ', ' ')
         texto = texto.replace(' e ', ' ')
         texto = texto.replace(' o ', ' ')
+        texto = texto.replace(' os ', ' ')
         texto = texto.replace(' ao ', ' ')
         texto = texto.replace(' da ', ' ')
         texto = texto.replace(' de ', ' ')
@@ -121,30 +154,24 @@ class Levenshtein:
         texto = texto.replace(' umas ', ' ')
         return texto
 
-
     # Simplifica o texto de entrada para tornar a comparação entre as frases mais eficiente
     @staticmethod
     def limpar_texto(texto):
         texto = texto.lower()
         texto = Levenshtein.remover_acentos(texto)
-        texto = Levenshtein.remover_caracteres_especiais(texto)
         texto = Levenshtein.remover_sinais_pontuacao(texto)
         texto = Levenshtein.remover_palavras_simples(texto)
+        texto = Levenshtein.remover_caracteres_especiais(texto)
         return texto
-
 
     # Método principal que compara as frases entre dois textos e retorna o percentual de similaridade entre eles
     @staticmethod
-    @benchmark(num_iters=10)
+    @benchmark()
     def compara_textos(texto1, texto2):
+
         # Simplificação dos textos de entrada
         texto1 = Levenshtein.limpar_texto(texto1)
         texto2 = Levenshtein.limpar_texto(texto2)
-
-        # Exibe o número de caracteres de cada texto após a simplificação
-        #print('Tamanho do texto1: ', len(texto1))
-        #print('Tamanho do texto2: ', len(texto2))
-        #print('')
 
         # Separa os dois textos em listas com frases. Os sinais de ? e ! foram convertidos em .
         lista1 = texto1.split('. ')
@@ -160,10 +187,10 @@ class Levenshtein:
 
         # Loop que fará a comparação de cada frase do texto1
         for i in range(0, len(lista1)):
-            d_max = 1000
+            palavras1 = lista1[i].split()
+            qt_palavras1 = len(palavras1)
+            max_indice_levenshtein = 0
             posicao_j = 0
-            qt_palavras1 = 0
-            qt_palavras2 = 0
 
             # Exibe cada frase do texto1 antes de compará-la às frases do texto2
             #print(lista1[i])
@@ -171,31 +198,24 @@ class Levenshtein:
             # Loop que fará a comparação com cada frase do texto2
             for j in range(0, len(lista2)):
 
-                # Para cada frase do texto2, calcula-se a distância de Levenshtein
-                distancia, m, n = Levenshtein.levenshtein_palavra(lista1[i], lista2[j])
+                palavras2 = lista2[j].split()
+                indice_levenshtein = Levenshtein.levenshtein_palavra(palavras1, palavras2)
 
-                # Se a distância de Levenshtein encontrada for menor que a distância máxima:
+                # Se o índice de Levenshtein encontrado for maior que índice máximo:
                 # A frase do texto2 corrente possui uma similaridade melhor com a frase do texto1
                 # Nesta situação, devemos guardar os valores encontrados
-                if distancia < d_max:
-                    d_max = distancia
+                if indice_levenshtein > max_indice_levenshtein:
+                    max_indice_levenshtein = indice_levenshtein
                     posicao_j = j
-                    qt_palavras1 = m
-                    qt_palavras2 = n
 
             # Ao percorrer todas as frases do texto2, podemos identificar qual delas possui maior similaridade com o texto1
             # Calcula-se o percentual de similaridade entre as duas frases
-            percent_similaridade = 0
-            if qt_palavras1 > 0:
-                percent_distancia = (d_max / qt_palavras1) * 100
-                percent_similaridade = 100 - percent_distancia
+            # percent_distancia = (d_max / qt_palavras) * 100
+            percent_similaridade = max_indice_levenshtein * 100
 
             # Exibição da frase do texto2 que possui maior similaridade com o texto1
             #print('Frase com maior similaridade:')
             #print(lista2[posicao_j])
-
-            # Exibição da menor distância de Levenshtein entre as duas frases do texto1 e texto2
-            #print('Distância Mínima: ', d_max)
 
             # Exibição do percentual de similaridade entre as duas frases
             #print('Percentual de similaridade: ', percent_similaridade)
@@ -224,3 +244,11 @@ class Levenshtein:
         #print('Similaridade total entre os textos: ', similaridade)
         return similaridade
 
+    # Método principal que compara os textos utilizando os algoritmos originais
+    @benchmark()
+    def compara_textos_original(texto1, texto2):
+        palavras1 = texto1.split()
+        palavras2 = texto2.split()
+        indice_levenshtein = Levenshtein.levenshtein_palavra(palavras1, palavras2)
+        print('Similaridade total entre os textos', indice_levenshtein * 100)
+        return indice_levenshtein * 100

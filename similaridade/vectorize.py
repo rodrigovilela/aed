@@ -11,7 +11,9 @@ class vectorize():
     def remove_stop_words(document, language):
         if isinstance(document, str):
             t_doc = document.split(' ')
-
+        else:
+            t_doc = document
+        t_doc = [word for word in t_doc if len(word) > 3]
         return list(set(t_doc) - set(stopwords.words(language)))
 
     @staticmethod
@@ -33,11 +35,11 @@ class vectorize():
         doc_dict = []
         if stopwords is True:
             for doc in documents:
-                t_doc = vectorize.remove_stop_words(doc, 'english')
+                t_doc = vectorize.remove_stop_words(doc, 'portuguese')
                 doc_dict = vectorize.get_dict(t_doc, doc_dict)
         else:
             for doc in documents:
-                t_doc = doc.split(' ')
+                t_doc = [word for word in doc.split(' ') if len(word) > 3]
                 doc_dict = vectorize.get_dict(t_doc, doc_dict)
         
         return doc_dict
@@ -51,7 +53,8 @@ class vectorize():
             Frequencia de cada palavra por documento
         """
         bag_words = dict.fromkeys(doc_dict, 0)
-        for token in tokens:
+        _tokens = [word for word in tokens if len(word) > 3]        
+        for token in _tokens:            
             bag_words[token] += 1
         return bag_words
 
@@ -67,7 +70,10 @@ class vectorize():
         len_doc = len(doc_dict)
 
         for token, count in bag_words.items():
-            tf[token] = count / float(len_doc)
+            if count > 0:
+                tf[token] = count / float(len_doc)
+            else:
+                tf[token] = 0
         return tf
 
     @staticmethod
@@ -84,7 +90,10 @@ class vectorize():
                     idf_dict[word] += 1
 
         for word, count in idf_dict.items():
-            idf_dict[word] = math.log(n_docs / float(count))
+            if count > 0:
+                idf_dict[word] = math.log(n_docs / float(count))
+            else:
+                idf_dict[word] = 0
 
         return idf_dict
 

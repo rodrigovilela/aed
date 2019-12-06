@@ -20,7 +20,7 @@
     <div class="col-md-4">
       <h3><span class="glyphicon glyphicon-link"></span> Notícias relacionadas</h3>
       <ul>
-        {% for relacionada in relacionadas %}
+        {% for relacionada in noticias_relacionadas %}
             <li><a href="/news-cos/{{relacionada.id}}">{{relacionada.titulo}} ({{relacionada.percentual}}%)</a></li>
         {% endfor %}
       </ul>

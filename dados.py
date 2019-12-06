@@ -9,10 +9,15 @@ class db():
     @staticmethod
     def _connect():
         return psycopg2.connect(
-            dbname="dfirdveeu96qjl",
-            user="rddckunaytjjjw",
-            password="e58481f98da1f39fc82cf7d9be7c90186e1f32ad19d6b30d8603e41699b919c8",
-            host="ec2-174-129-18-42.compute-1.amazonaws.com",
+            # dbname="dfirdveeu96qjl",
+            # user="rddckunaytjjjw",
+            # password="e58481f98da1f39fc82cf7d9be7c90186e1f32ad19d6b30d8603e41699b919c8",
+            # host="ec2-174-129-18-42.compute-1.amazonaws.com",
+            # port="5432"
+            dbname="news",
+            user="postgres",
+            password="postgres",
+            host="localhost",
             port="5432"
         )
 
@@ -45,9 +50,9 @@ class db():
             connection = db._connect()
             cursor = connection.cursor()
 
-            for titulo, texto in data:
-                sql_query = """ INSERT INTO hello_noticia(TITULO, TEXTO, VEICULO) VALUES (%s, %s, %s)"""
-                record_data = (titulo, texto, dataset_name)
+            for titulo, texto, publicacao in data:
+                sql_query = """ INSERT INTO hello_noticia(TITULO, TEXTO, PUBLICACAO, VEICULO) VALUES (%s, %s, %s, %s)"""
+                record_data = (titulo, texto, publicacao, dataset_name)
 
                 cursor.execute(sql_query, record_data)
                 connection.commit()

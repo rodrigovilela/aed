@@ -10,13 +10,18 @@ class ProcessadorTexto():
         Cada trecho é a uma frase terminada em ponto final.
         :return: array com os trechos identificados.
         '''
+        texto = re.sub(r'<.*?>', ' ', texto)
+        texto = re.sub(r'[^\sça-zA-Z|^-|^\_|^\?|^\!|^\;|^.|^á|^é|^í|^ó|^ú|^â|^ê|^ô|^ã|^õ]', ' ', texto)
+        texto = re.sub(r'\d+', '', texto)
+        texto = re.sub(r'[\?|\!|\;]', '.', texto)
+        texto = re.sub(r'\W*\b\w{1,3}\b', ' ', texto)
+        texto = re.sub(r'\s+', ' ', texto)
 
-        texto = re.sub(r'[\?|\!]', '.', texto)
         trechos = texto.split(".")
         trechos_validos = []
         for trecho in trechos:
             trecho = trecho.strip()
-            if len(trecho) > 0:
+            if len(trecho) > 3 and len(trecho.split()) > 5:
                 trechos_validos.append(trecho.lower())
 
         return trechos_validos
