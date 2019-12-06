@@ -72,7 +72,7 @@ def trechos(request):
 
 def similaridades(request):
 
-    noticias = Noticia.objects.filter(id__gte=4900)
+    noticias = Noticia.objects.all()
 
     ###
     path = 'C:/Users/Rodrigo/PycharmProjects/aed/noticias.txt'
@@ -85,7 +85,7 @@ def similaridades(request):
 
     for noticia in noticias:
         print("Prcessando:", noticia.id)
-        similares = Noticia.objects.filter(id__gte=4900).exclude(id=noticia.id)
+        similares = Noticia.objects.all().exclude(id=noticia.id)
 
         for similar in similares:
 
@@ -239,7 +239,7 @@ def news_cosine(request, id):
 def news_grafico(request, id):
     noticia_buscada = Noticia.objects.get(id=id)
     #noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)[:50]
-    noticias = Noticia.objects.filter(id__gte=5000, id__lte=5014).exclude(id=noticia_buscada.id)
+    noticias = Noticia.objects.all().exclude(id=noticia_buscada.id)
 
     ### cosine
     # Apenas para teste
